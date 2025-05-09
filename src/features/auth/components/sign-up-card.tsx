@@ -11,16 +11,23 @@ import {
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { SignInFlow } from "../types";
+import { useState } from "react";
 
 interface SignUpCardProps {
   setState: (state: SignInFlow) => void;
 }
 
 export const SignUpCard = ({ setState }: SignUpCardProps) => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
   return (
     <Card className="w-full h-full p-8">
       <CardHeader className="px-0 pt-0">
-        <CardTitle className="text-2xl font-bold">Signup to continue</CardTitle>
+        <CardTitle className="text-2xl font-bold">
+          Sign up to continue
+        </CardTitle>
         <CardDescription>
           Use your email or another service to continue
         </CardDescription>
@@ -29,19 +36,27 @@ export const SignUpCard = ({ setState }: SignUpCardProps) => {
         <form className="space-y-2.5">
           <Input
             disabled={false}
-            value={""}
-            onChange={() => {}}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             placeholder="Email"
             type="email"
             required
           />
           <Input
             disabled={false}
-            value={""}
-            onChange={() => {}}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
             placeholder="Password"
             type="password"
             required
+          />
+          <Input
+            disabled={false}
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            placeholder="Confirm Password"
+            required
+            type="password"
           />
           <Button type="submit" className="w-full" size={"lg"} disabled={false}>
             Continue
