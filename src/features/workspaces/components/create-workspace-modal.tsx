@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -7,12 +8,35 @@ import {
 import { useCreateWorkspaceModal } from "../store/use-create-workspace-modal";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useCreatWorkspace } from "../api/use-create-workspace";
+import { useRouter } from "next/navigation";
 
 export const CreateWorkspaceModal = () => {
+  const router = useRouter();
   const [open, setOpen] = useCreateWorkspaceModal();
+  const [name, setName] = useState("");
+
+  const { mutate, isPending, isError, isSuccess } = useCreatWorkspace();
 
   const handleClose = () => {
     setOpen(false);
+    setName("");
+  };
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    mutate(
+      {
+        name,
+      },
+      {
+        onSuccess(id) {
+          router.push(`/workspace/${id}`);
+          handleClose();
+        },
+      }
+    );
   };
 
   return (
@@ -21,18 +45,18 @@ export const CreateWorkspaceModal = () => {
         <DialogHeader>
           <DialogTitle>Create Workspace</DialogTitle>
         </DialogHeader>
-        <form className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <Input
-            value={""}
-            disabled={false}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            disabled={isPending}
             required
             autoFocus
             minLength={3}
-            onChange={() => {}}
             placeholder="Workspace name e.g. 'Work', 'Personal', 'Home'"
           />
           <div className="flex justify-end">
-            <Button disabled={false}>Create</Button>
+            <Button disabled={isPending}>Create</Button>
           </div>
         </form>
       </DialogContent>
