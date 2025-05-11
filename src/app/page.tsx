@@ -1,11 +1,28 @@
 "use client";
 
 import { UserButton } from "@/features/auth/components/user-button";
+import { useCreateWorkspaceModal } from "@/features/workspaces/store/use-create-workspace-modal";
+import { useGetWorkspaces } from "@/features/workspaces/api/use-get-workspaces";
+import { useEffect, useMemo } from "react";
 
 export default function Home() {
+  const [open, setOpen] = useCreateWorkspaceModal();
+
+  const { data, isLoading } = useGetWorkspaces();
+
+  const workspaceId = useMemo(() => data?.[0]?._id, [data]);
+
+  useEffect(() => {
+    if (isLoading) return;
+
+    if (workspaceId) console.log("redirect");
+    else if (!open) {
+      setOpen(true);
+    }
+  }, [isLoading, workspaceId, open, setOpen]);
+
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen py-2">
-      <h1 className="text-4xl font-bold">Welcome to Convex</h1>
+    <div>
       <UserButton />
     </div>
   );
