@@ -13,7 +13,7 @@ type Options = {
   throwError?: boolean;
 };
 
-export const useCreatWorkspace = () => {
+export const useCreateWorkspace = () => {
   const [data, setData] = useState<ResponseType>(null);
   const [error, setError] = useState<Error | null>(null);
   const [status, setStatus] = useState<

@@ -8,15 +8,16 @@ import {
 import { useCreateWorkspaceModal } from "../store/use-create-workspace-modal";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useCreatWorkspace } from "../api/use-create-workspace";
+import { useCreateWorkspace } from "../api/use-create-workspace";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 export const CreateWorkspaceModal = () => {
   const router = useRouter();
   const [open, setOpen] = useCreateWorkspaceModal();
   const [name, setName] = useState("");
 
-  const { mutate, isPending, isError, isSuccess } = useCreatWorkspace();
+  const { mutate, isPending } = useCreateWorkspace();
 
   const handleClose = () => {
     setOpen(false);
@@ -32,6 +33,7 @@ export const CreateWorkspaceModal = () => {
       },
       {
         onSuccess(id) {
+          toast.success("Workspace created");
           router.push(`/workspace/${id}`);
           handleClose();
         },
