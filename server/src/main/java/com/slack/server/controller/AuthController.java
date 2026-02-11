@@ -1,6 +1,7 @@
 package com.slack.server.controller;
 
 import com.slack.server.model.User;
+import com.slack.server.dto.UserDTO;
 import com.slack.server.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
@@ -25,14 +26,14 @@ public class AuthController {
         );
         // Auto-login after registration: generate token and return LoginResponse
         String token = authService.login(request.getEmail(), request.getPassword());
-        return ResponseEntity.ok(new LoginResponse(token, user));
+        return ResponseEntity.ok(new LoginResponse(token, UserDTO.fromEntity(user)));
     }
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@RequestBody @Valid LoginRequest request) {
         String token = authService.login(request.getEmail(), request.getPassword());
         User user = authService.getCurrentUser();
-        return ResponseEntity.ok(new LoginResponse(token, user));
+        return ResponseEntity.ok(new LoginResponse(token, UserDTO.fromEntity(user)));
     }
 
     @PostMapping("/logout")
@@ -42,20 +43,24 @@ public class AuthController {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<User> getCurrentUser() {
-        User user = authService.getCurrentUser();
-        return ResponseEntity.ok(user);
+    public ResponseEntity<UserDTO> getCurrentUser() {
+        try {
+            User user = authService.getCurrentUser();
+            return ResponseEntity.ok(UserDTO.fromEntity(user));
+        } catch (Exception e) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.UNAUTHORIZED).build();
+        }
     }
 
     @PutMapping("/profile")
-    public ResponseEntity<User> updateProfile(
+    public ResponseEntity<UserDTO> updateProfile(
             @RequestBody @Valid UpdateProfileRequest request) {
         User user = authService.updateProfile(
             request.getUserId(),
             request.getName(),
             request.getImageUrl()
         );
-        return ResponseEntity.ok(user);
+        return ResponseEntity.ok(UserDTO.fromEntity(user));
     }
 
     @PutMapping("/password")
@@ -97,9 +102,9 @@ public class AuthController {
 
     public static class LoginResponse {
         private String token;
-        private User user;
+        private UserDTO user;
 
-        public LoginResponse(String token, User user) {
+        public LoginResponse(String token, UserDTO user) {
             this.token = token;
             this.user = user;
         }
@@ -107,8 +112,8 @@ public class AuthController {
         public String getToken() { return token; }
         public void setToken(String token) { this.token = token; }
 
-        public User getUser() { return user; }
-        public void setUser(User user) { this.user = user; }
+        public UserDTO getUser() { return user; }
+        public void setUser(UserDTO user) { this.user = user; }
     }
 
     public static class UpdateProfileRequest {
