@@ -1,6 +1,7 @@
 package com.slack.server.controller;
 
 import com.slack.server.model.Reaction;
+import com.slack.server.dto.ReactionDTO;
 import com.slack.server.service.ReactionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
@@ -8,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/reactions")
@@ -17,14 +19,14 @@ public class ReactionController {
     private ReactionService reactionService;
 
     @PostMapping
-    public ResponseEntity<Reaction> addReaction(
+    public ResponseEntity<ReactionDTO> addReaction(
             @RequestBody @Valid AddReactionRequest request) {
         Reaction reaction = reactionService.addReaction(
             request.getMessageId(),
             request.getMemberId(),
             request.getValue()
         );
-        return ResponseEntity.ok(reaction);
+        return ResponseEntity.ok(ReactionDTO.fromEntity(reaction));
     }
 
     @DeleteMapping
@@ -39,10 +41,13 @@ public class ReactionController {
     }
 
     @GetMapping("/message/{messageId}")
-    public ResponseEntity<List<Reaction>> getMessageReactions(
+    public ResponseEntity<List<ReactionDTO>> getMessageReactions(
             @PathVariable @NonNull String messageId) {
         List<Reaction> reactions = reactionService.getMessageReactions(messageId);
-        return ResponseEntity.ok(reactions);
+        List<ReactionDTO> reactionDTOs = reactions.stream()
+                .map(ReactionDTO::fromEntity)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(reactionDTOs);
     }
 
     public static class AddReactionRequest {

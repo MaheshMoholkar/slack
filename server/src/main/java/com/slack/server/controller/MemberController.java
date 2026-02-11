@@ -1,6 +1,7 @@
 package com.slack.server.controller;
 
 import com.slack.server.model.Member;
+import com.slack.server.dto.MemberDTO;
 import com.slack.server.service.MemberService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
@@ -16,36 +17,36 @@ public class MemberController {
     private MemberService memberService;
 
     @PostMapping
-    public ResponseEntity<Member> addMember(
+    public ResponseEntity<MemberDTO> addMember(
             @RequestBody @Valid AddMemberRequest request) {
         Member member = memberService.addMember(
             request.getWorkspaceId(),
             request.getUserId(),
             request.getRole()
         );
-        return ResponseEntity.ok(member);
+        return ResponseEntity.ok(MemberDTO.fromEntity(member));
     }
 
     @PutMapping("/{memberId}/role")
-    public ResponseEntity<Member> updateMemberRole(
+    public ResponseEntity<MemberDTO> updateMemberRole(
             @PathVariable @NonNull String memberId,
             @RequestBody @Valid UpdateRoleRequest request) {
         Member member = memberService.updateMemberRole(memberId, request.getRole());
-        return ResponseEntity.ok(member);
+        return ResponseEntity.ok(MemberDTO.fromEntity(member));
     }
 
     @GetMapping("/{memberId}")
-    public ResponseEntity<Member> getMember(@PathVariable @NonNull String memberId) {
+    public ResponseEntity<MemberDTO> getMember(@PathVariable @NonNull String memberId) {
         Member member = memberService.getMemberById(memberId);
-        return ResponseEntity.ok(member);
+        return ResponseEntity.ok(MemberDTO.fromEntity(member));
     }
 
     @GetMapping("/workspace/{workspaceId}/user/{userId}")
-    public ResponseEntity<Member> getWorkspaceMember(
+    public ResponseEntity<MemberDTO> getWorkspaceMember(
             @PathVariable @NonNull String workspaceId,
             @PathVariable @NonNull String userId) {
         Member member = memberService.getMemberByWorkspaceAndUser(workspaceId, userId);
-        return ResponseEntity.ok(member);
+        return ResponseEntity.ok(MemberDTO.fromEntity(member));
     }
 
     @DeleteMapping("/{memberId}")

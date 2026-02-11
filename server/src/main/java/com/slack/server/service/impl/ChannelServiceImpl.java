@@ -3,6 +3,7 @@ package com.slack.server.service.impl;
 import com.slack.server.model.Channel;
 import com.slack.server.model.Workspace;
 import com.slack.server.model.event.WebSocketEvent;
+import com.slack.server.dto.ChannelDTO;
 import com.slack.server.repository.ChannelRepository;
 import com.slack.server.repository.WorkspaceRepository;
 import com.slack.server.service.ChannelService;
@@ -41,10 +42,10 @@ public class ChannelServiceImpl implements ChannelService {
         channel = channelRepository.save(channel);
 
         // Send WebSocket notification
-        WebSocketEvent<Channel> event = new WebSocketEvent<>();
+        WebSocketEvent<ChannelDTO> event = new WebSocketEvent<>();
         event.setType(WebSocketEvent.EventType.CHANNEL_CREATED);
         event.setWorkspaceId(workspaceId);
-        event.setPayload(channel);
+        event.setPayload(ChannelDTO.fromEntity(channel));
         webSocketService.sendToWorkspace(workspaceId, event);
 
         return channel;
@@ -63,11 +64,11 @@ public class ChannelServiceImpl implements ChannelService {
         channel = channelRepository.save(channel);
 
         // Send WebSocket notification
-        WebSocketEvent<Channel> event = new WebSocketEvent<>();
+        WebSocketEvent<ChannelDTO> event = new WebSocketEvent<>();
         event.setType(WebSocketEvent.EventType.CHANNEL_UPDATED);
         event.setWorkspaceId(channel.getWorkspace().getId());
         event.setChannelId(channelId);
-        event.setPayload(channel);
+        event.setPayload(ChannelDTO.fromEntity(channel));
         webSocketService.sendToWorkspace(channel.getWorkspace().getId(), event);
 
         return channel;

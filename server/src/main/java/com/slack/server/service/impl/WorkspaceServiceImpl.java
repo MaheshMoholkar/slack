@@ -5,6 +5,8 @@ import com.slack.server.model.Workspace;
 import com.slack.server.model.Member;
 import com.slack.server.model.User;
 import com.slack.server.model.event.WebSocketEvent;
+import com.slack.server.dto.WorkspaceDTO;
+import com.slack.server.dto.MemberDTO;
 import com.slack.server.repository.ChannelRepository;
 import com.slack.server.repository.WorkspaceRepository;
 import com.slack.server.repository.MemberRepository;
@@ -62,10 +64,10 @@ public class WorkspaceServiceImpl implements WorkspaceService {
         channelRepository.save(generalChannel);
 
         // Send WebSocket notification
-        WebSocketEvent<Workspace> event = new WebSocketEvent<>();
+        WebSocketEvent<WorkspaceDTO> event = new WebSocketEvent<>();
         event.setType(WebSocketEvent.EventType.WORKSPACE_CREATED);
         event.setWorkspaceId(workspace.getId());
-        event.setPayload(workspace);
+        event.setPayload(WorkspaceDTO.fromEntity(workspace));
         webSocketService.sendToWorkspace(workspace.getId(), event);
 
         return workspace;
@@ -78,10 +80,10 @@ public class WorkspaceServiceImpl implements WorkspaceService {
         workspace = workspaceRepository.save(workspace);
 
         // Send WebSocket notification
-        WebSocketEvent<Workspace> event = new WebSocketEvent<>();
+        WebSocketEvent<WorkspaceDTO> event = new WebSocketEvent<>();
         event.setType(WebSocketEvent.EventType.WORKSPACE_UPDATED);
         event.setWorkspaceId(workspaceId);
-        event.setPayload(workspace);
+        event.setPayload(WorkspaceDTO.fromEntity(workspace));
         webSocketService.sendToWorkspace(workspaceId, event);
 
         return workspace;
@@ -122,10 +124,10 @@ public class WorkspaceServiceImpl implements WorkspaceService {
         memberRepository.save(member);
 
         // Send WebSocket notification
-        WebSocketEvent<Member> event = new WebSocketEvent<>();
+        WebSocketEvent<MemberDTO> event = new WebSocketEvent<>();
         event.setType(WebSocketEvent.EventType.MEMBER_JOINED);
         event.setWorkspaceId(workspace.getId());
-        event.setPayload(member);
+        event.setPayload(MemberDTO.fromEntity(member));
         webSocketService.sendToWorkspace(workspace.getId(), event);
 
         return workspace;
@@ -152,10 +154,10 @@ public class WorkspaceServiceImpl implements WorkspaceService {
         workspaceRepository.save(workspace);
 
         // Send WebSocket notification
-        WebSocketEvent<Workspace> event = new WebSocketEvent<>();
+        WebSocketEvent<WorkspaceDTO> event = new WebSocketEvent<>();
         event.setType(WebSocketEvent.EventType.WORKSPACE_UPDATED);
         event.setWorkspaceId(workspaceId);
-        event.setPayload(workspace);
+        event.setPayload(WorkspaceDTO.fromEntity(workspace));
         webSocketService.sendToWorkspace(workspaceId, event);
 
         return newJoinCode;

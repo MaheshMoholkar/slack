@@ -3,6 +3,7 @@ package com.slack.server.controller;
 import com.slack.server.model.Conversation;
 import com.slack.server.model.Member;
 import com.slack.server.model.User;
+import com.slack.server.dto.ConversationDTO;
 import com.slack.server.repository.MemberRepository;
 import com.slack.server.service.ConversationService;
 import jakarta.persistence.EntityNotFoundException;
@@ -13,6 +14,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/conversations")
@@ -25,18 +27,18 @@ public class ConversationController {
     private MemberRepository memberRepository;
 
     @PostMapping
-    public ResponseEntity<Conversation> createConversation(
+    public ResponseEntity<ConversationDTO> createConversation(
             @RequestBody @Valid CreateConversationRequest request) {
         Conversation conversation = conversationService.createConversation(
             request.getWorkspaceId(),
             request.getMemberOneId(),
             request.getMemberTwoId()
         );
-        return ResponseEntity.ok(conversation);
+        return ResponseEntity.ok(ConversationDTO.fromEntity(conversation));
     }
 
     @PostMapping("/create-or-get")
-    public ResponseEntity<Conversation> createOrGetConversation(
+    public ResponseEntity<ConversationDTO> createOrGetConversation(
             @RequestBody @Valid CreateOrGetRequest request,
             @AuthenticationPrincipal User currentUser) {
         // Resolve the current user's member in the workspace
@@ -50,7 +52,7 @@ public class ConversationController {
             currentMember.getId(),
             request.getMemberId()
         );
-        return ResponseEntity.ok(conversation);
+        return ResponseEntity.ok(ConversationDTO.fromEntity(conversation));
     }
 
     @DeleteMapping("/{conversationId}")
@@ -60,24 +62,30 @@ public class ConversationController {
     }
 
     @GetMapping("/{conversationId}")
-    public ResponseEntity<Conversation> getConversation(@PathVariable @NonNull String conversationId) {
+    public ResponseEntity<ConversationDTO> getConversation(@PathVariable @NonNull String conversationId) {
         Conversation conversation = conversationService.getConversationById(conversationId);
-        return ResponseEntity.ok(conversation);
+        return ResponseEntity.ok(ConversationDTO.fromEntity(conversation));
     }
 
     @GetMapping("/workspace/{workspaceId}/member/{memberId}")
-    public ResponseEntity<List<Conversation>> getMemberConversations(
+    public ResponseEntity<List<ConversationDTO>> getMemberConversations(
             @PathVariable @NonNull String workspaceId,
             @PathVariable @NonNull String memberId) {
         List<Conversation> conversations = conversationService.getMemberConversations(workspaceId, memberId);
-        return ResponseEntity.ok(conversations);
+        List<ConversationDTO> conversationDTOs = conversations.stream()
+                .map(ConversationDTO::fromEntity)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(conversationDTOs);
     }
 
     @GetMapping("/workspace/{workspaceId}")
-    public ResponseEntity<List<Conversation>> getWorkspaceConversations(
+    public ResponseEntity<List<ConversationDTO>> getWorkspaceConversations(
             @PathVariable @NonNull String workspaceId) {
         List<Conversation> conversations = conversationService.getWorkspaceConversations(workspaceId);
-        return ResponseEntity.ok(conversations);
+        List<ConversationDTO> conversationDTOs = conversations.stream()
+                .map(ConversationDTO::fromEntity)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(conversationDTOs);
     }
 
     public static class CreateConversationRequest {

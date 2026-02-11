@@ -1,6 +1,7 @@
 package com.slack.server.controller;
 
 import com.slack.server.model.Message;
+import com.slack.server.dto.MessageDTO;
 import com.slack.server.service.MessageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -9,8 +10,10 @@ import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/messages")
@@ -20,7 +23,7 @@ public class MessageController {
     private MessageService messageService;
 
     @PostMapping
-    public ResponseEntity<Message> createMessage(
+    public ResponseEntity<MessageDTO> createMessage(
             @RequestBody @Valid CreateMessageRequest request) {
         Message message = messageService.createMessage(
             request.getBody(),
@@ -31,15 +34,15 @@ public class MessageController {
             request.getConversationId(),
             request.getParentMessageId()
         );
-        return ResponseEntity.ok(message);
+        return ResponseEntity.ok(MessageDTO.fromEntity(message));
     }
 
     @PutMapping("/{messageId}")
-    public ResponseEntity<Message> updateMessage(
+    public ResponseEntity<MessageDTO> updateMessage(
             @PathVariable @NonNull String messageId,
             @RequestBody @Valid UpdateMessageRequest request) {
         Message message = messageService.updateMessage(messageId, request.getBody());
-        return ResponseEntity.ok(message);
+        return ResponseEntity.ok(MessageDTO.fromEntity(message));
     }
 
     @DeleteMapping("/{messageId}")
@@ -49,40 +52,45 @@ public class MessageController {
     }
 
     @GetMapping("/channel/{channelId}")
-    public ResponseEntity<Page<Message>> getChannelMessages(
+    public ResponseEntity<Page<MessageDTO>> getChannelMessages(
             @PathVariable @NonNull String channelId,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "50") int size) {
+            @RequestParam(defaultValue = "50") @Max(100) int size) {
         Page<Message> messages = messageService.getChannelMessages(
             channelId,
             PageRequest.of(page, size)
         );
-        return ResponseEntity.ok(messages);
+        Page<MessageDTO> messageDTOs = messages.map(m -> messageService.enrichWithThreadInfo(MessageDTO.fromEntity(m)));
+        return ResponseEntity.ok(messageDTOs);
     }
 
     @GetMapping("/conversation/{conversationId}")
-    public ResponseEntity<Page<Message>> getConversationMessages(
+    public ResponseEntity<Page<MessageDTO>> getConversationMessages(
             @PathVariable @NonNull String conversationId,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "50") int size) {
+            @RequestParam(defaultValue = "50") @Max(100) int size) {
         Page<Message> messages = messageService.getConversationMessages(
             conversationId,
             PageRequest.of(page, size)
         );
-        return ResponseEntity.ok(messages);
+        Page<MessageDTO> messageDTOs = messages.map(m -> messageService.enrichWithThreadInfo(MessageDTO.fromEntity(m)));
+        return ResponseEntity.ok(messageDTOs);
     }
 
     @GetMapping("/thread/{parentMessageId}")
-    public ResponseEntity<List<Message>> getThreadMessages(
+    public ResponseEntity<List<MessageDTO>> getThreadMessages(
             @PathVariable @NonNull String parentMessageId) {
         List<Message> messages = messageService.getThreadMessages(parentMessageId);
-        return ResponseEntity.ok(messages);
+        List<MessageDTO> messageDTOs = messages.stream()
+                .map(MessageDTO::fromEntity)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(messageDTOs);
     }
 
     @GetMapping("/{messageId}")
-    public ResponseEntity<Message> getMessageById(@PathVariable @NonNull String messageId) {
+    public ResponseEntity<MessageDTO> getMessageById(@PathVariable @NonNull String messageId) {
         Message message = messageService.getMessageById(messageId);
-        return ResponseEntity.ok(message);
+        return ResponseEntity.ok(MessageDTO.fromEntity(message));
     }
 
     @PostMapping("/typing")
@@ -129,6 +137,7 @@ public class MessageController {
     }
 
     public static class CreateMessageRequest {
+        @jakarta.validation.constraints.Size(max = 10000, message = "Message body too long")
         private @NonNull String body = "";
         private @Nullable String imageId;
         private @NonNull String workspaceId = "";

@@ -1,6 +1,7 @@
 package com.slack.server.service;
 
 import com.slack.server.model.Message;
+import com.slack.server.dto.MessageDTO;
 import org.springframework.lang.Nullable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -22,6 +23,9 @@ public interface MessageService {
     Page<Message> getConversationMessages(String conversationId, Pageable pageable);
     
     List<Message> getThreadMessages(String parentMessageId);
+
+    /** Enrich a MessageDTO with thread reply count, last replier info, and timestamp */
+    MessageDTO enrichWithThreadInfo(MessageDTO dto);
 
     // Real-time methods
     void notifyTyping(String workspaceId, @Nullable String channelId, @Nullable String conversationId, String userId);

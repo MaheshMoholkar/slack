@@ -2,6 +2,8 @@ package com.slack.server.controller;
 
 import com.slack.server.model.Workspace;
 import com.slack.server.model.Member;
+import com.slack.server.dto.MemberDTO;
+import com.slack.server.dto.WorkspaceDTO;
 import com.slack.server.service.WorkspaceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
@@ -9,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/workspaces")
@@ -18,21 +21,21 @@ public class WorkspaceController {
     private WorkspaceService workspaceService;
 
     @PostMapping
-    public ResponseEntity<Workspace> createWorkspace(
+    public ResponseEntity<WorkspaceDTO> createWorkspace(
             @RequestBody @Valid CreateWorkspaceRequest request) {
         Workspace workspace = workspaceService.createWorkspace(
             request.getName(),
             request.getUserId()
         );
-        return ResponseEntity.ok(workspace);
+        return ResponseEntity.ok(WorkspaceDTO.fromEntity(workspace));
     }
 
     @PutMapping("/{workspaceId}")
-    public ResponseEntity<Workspace> updateWorkspace(
+    public ResponseEntity<WorkspaceDTO> updateWorkspace(
             @PathVariable @NonNull String workspaceId,
             @RequestBody @Valid UpdateWorkspaceRequest request) {
         Workspace workspace = workspaceService.updateWorkspace(workspaceId, request.getName());
-        return ResponseEntity.ok(workspace);
+        return ResponseEntity.ok(WorkspaceDTO.fromEntity(workspace));
     }
 
     @DeleteMapping("/{workspaceId}")
@@ -42,33 +45,39 @@ public class WorkspaceController {
     }
 
     @GetMapping("/{workspaceId}")
-    public ResponseEntity<Workspace> getWorkspace(@PathVariable @NonNull String workspaceId) {
+    public ResponseEntity<WorkspaceDTO> getWorkspace(@PathVariable @NonNull String workspaceId) {
         Workspace workspace = workspaceService.getWorkspaceById(workspaceId);
-        return ResponseEntity.ok(workspace);
+        return ResponseEntity.ok(WorkspaceDTO.fromEntity(workspace));
     }
 
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<Workspace>> getUserWorkspaces(
+    public ResponseEntity<List<WorkspaceDTO>> getUserWorkspaces(
             @PathVariable @NonNull String userId) {
         List<Workspace> workspaces = workspaceService.getUserWorkspaces(userId);
-        return ResponseEntity.ok(workspaces);
+        List<WorkspaceDTO> workspaceDTOs = workspaces.stream()
+                .map(WorkspaceDTO::fromEntity)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(workspaceDTOs);
     }
 
     @GetMapping("/{workspaceId}/members")
-    public ResponseEntity<List<Member>> getWorkspaceMembers(
+    public ResponseEntity<List<MemberDTO>> getWorkspaceMembers(
             @PathVariable @NonNull String workspaceId) {
         List<Member> members = workspaceService.getWorkspaceMembers(workspaceId);
-        return ResponseEntity.ok(members);
+        List<MemberDTO> memberDTOs = members.stream()
+                .map(MemberDTO::fromEntity)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(memberDTOs);
     }
 
     @PostMapping("/join")
-    public ResponseEntity<Workspace> joinWorkspace(
+    public ResponseEntity<WorkspaceDTO> joinWorkspace(
             @RequestBody @Valid JoinWorkspaceRequest request) {
         Workspace workspace = workspaceService.joinWorkspace(
             request.getJoinCode(),
             request.getUserId()
         );
-        return ResponseEntity.ok(workspace);
+        return ResponseEntity.ok(WorkspaceDTO.fromEntity(workspace));
     }
 
     @PostMapping("/{workspaceId}/regenerate-code")

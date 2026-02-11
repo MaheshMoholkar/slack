@@ -4,6 +4,7 @@ import com.slack.server.model.Reaction;
 import com.slack.server.model.Message;
 import com.slack.server.model.Member;
 import com.slack.server.model.event.WebSocketEvent;
+import com.slack.server.dto.ReactionDTO;
 import com.slack.server.repository.ReactionRepository;
 import com.slack.server.repository.MessageRepository;
 import com.slack.server.repository.MemberRepository;
@@ -53,12 +54,12 @@ public class ReactionServiceImpl implements ReactionService {
             });
 
         // Send WebSocket notification
-        WebSocketEvent<Reaction> event = new WebSocketEvent<>();
+        WebSocketEvent<ReactionDTO> event = new WebSocketEvent<>();
         event.setType(WebSocketEvent.EventType.REACTION_ADDED);
         event.setWorkspaceId(message.getWorkspace().getId());
         event.setChannelId(message.getChannel() != null ? message.getChannel().getId() : null);
         event.setConversationId(message.getConversation() != null ? message.getConversation().getId() : null);
-        event.setPayload(reaction);
+        event.setPayload(ReactionDTO.fromEntity(reaction));
 
         if (message.getChannel() != null) {
             webSocketService.sendToChannel(message.getWorkspace().getId(), message.getChannel().getId(), event);

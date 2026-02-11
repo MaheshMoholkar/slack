@@ -4,6 +4,7 @@ import com.slack.server.model.Member;
 import com.slack.server.model.User;
 import com.slack.server.model.Workspace;
 import com.slack.server.model.event.WebSocketEvent;
+import com.slack.server.dto.MemberDTO;
 import com.slack.server.repository.MemberRepository;
 import com.slack.server.repository.UserRepository;
 import com.slack.server.repository.WorkspaceRepository;
@@ -51,10 +52,10 @@ public class MemberServiceImpl implements MemberService {
         member = memberRepository.save(member);
 
         // Send WebSocket notification
-        WebSocketEvent<Member> event = new WebSocketEvent<>();
+        WebSocketEvent<MemberDTO> event = new WebSocketEvent<>();
         event.setType(WebSocketEvent.EventType.MEMBER_JOINED);
         event.setWorkspaceId(workspaceId);
-        event.setPayload(member);
+        event.setPayload(MemberDTO.fromEntity(member));
         webSocketService.sendToWorkspace(workspaceId, event);
 
         return member;
@@ -67,10 +68,10 @@ public class MemberServiceImpl implements MemberService {
         member = memberRepository.save(member);
 
         // Send WebSocket notification
-        WebSocketEvent<Member> event = new WebSocketEvent<>();
+        WebSocketEvent<MemberDTO> event = new WebSocketEvent<>();
         event.setType(WebSocketEvent.EventType.MEMBER_UPDATED);
         event.setWorkspaceId(member.getWorkspace().getId());
-        event.setPayload(member);
+        event.setPayload(MemberDTO.fromEntity(member));
         webSocketService.sendToWorkspace(member.getWorkspace().getId(), event);
 
         return member;
