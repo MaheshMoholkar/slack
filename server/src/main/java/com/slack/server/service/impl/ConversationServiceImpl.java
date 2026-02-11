@@ -4,6 +4,7 @@ import com.slack.server.model.Conversation;
 import com.slack.server.model.Member;
 import com.slack.server.model.Workspace;
 import com.slack.server.model.event.WebSocketEvent;
+import com.slack.server.dto.ConversationDTO;
 import com.slack.server.repository.ConversationRepository;
 import com.slack.server.repository.MemberRepository;
 import com.slack.server.repository.WorkspaceRepository;
@@ -58,11 +59,15 @@ public class ConversationServiceImpl implements ConversationService {
         conversation.setMemberTwo(memberTwo);
         conversation = conversationRepository.save(conversation);
 
+        // Re-fetch with eager loading to ensure all relationships are available for DTO conversion
+        conversation = conversationRepository.findByIdWithMembers(conversation.getId())
+            .orElseThrow(() -> new EntityNotFoundException("Conversation not found after save"));
+
         // Send WebSocket notification
-        WebSocketEvent<Conversation> event = new WebSocketEvent<>();
+        WebSocketEvent<ConversationDTO> event = new WebSocketEvent<>();
         event.setType(WebSocketEvent.EventType.CONVERSATION_CREATED);
         event.setWorkspaceId(workspaceId);
-        event.setPayload(conversation);
+        event.setPayload(ConversationDTO.fromEntity(conversation));
         webSocketService.sendToWorkspace(workspaceId, event);
 
         return conversation;
@@ -85,7 +90,7 @@ public class ConversationServiceImpl implements ConversationService {
 
     @Override
     public Conversation getConversationById(String conversationId) {
-        return conversationRepository.findById(java.util.Objects.requireNonNull(conversationId))
+        return conversationRepository.findByIdWithMembers(java.util.Objects.requireNonNull(conversationId))
             .orElseThrow(() -> new EntityNotFoundException("Conversation not found"));
     }
 
