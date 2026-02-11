@@ -1,4 +1,4 @@
-// Types matching Spring Boot entities
+// Types matching Spring Boot DTOs exactly
 
 export interface User {
   id: string;
@@ -15,44 +15,39 @@ export interface Workspace {
 }
 
 export interface Channel {
-  _id: string;
   id: string;
   name: string;
   workspaceId: string;
-  createdAt?: string | Date;
+  createdAt?: string;
 }
 
 export interface Member {
   id: string;
   role: "ADMIN" | "MEMBER";
   user: User;
-  workspaceId?: string;
+  workspace: Workspace;
 }
 
 export interface Message {
   id: string;
   body: string;
   imageId?: string;
-  memberId: string;
+  member: {
+    id: string;
+    role: "ADMIN" | "MEMBER";
+    user: {
+      id: string;
+      name: string;
+      imageUrl?: string;
+    };
+  };
   workspaceId: string;
   channelId?: string;
   conversationId?: string;
   parentMessageId?: string;
+  reactions: Reaction[];
   createdAt: number;
   updatedAt?: number;
-  // Populated fields from API
-  member?: Member;
-  image?: string | null;
-  user: {
-    id: string;
-    name: string;
-    image?: string;
-  };
-  reactions: ReactionGroup[];
-  threadCount?: number;
-  threadImage?: string;
-  threadName?: string;
-  threadTimestamp?: number;
 }
 
 export interface Reaction {
@@ -60,20 +55,33 @@ export interface Reaction {
   value: string;
   workspaceId: string;
   messageId: string;
-  memberId: string;
-}
-
-export interface ReactionGroup {
-  id: string;
-  value: string;
-  count: number;
-  memberIds: string[];
+  member: {
+    id: string;
+    userName: string;
+    userImage?: string;
+  };
 }
 
 export interface Conversation {
   id: string;
-  memberOneId: string;
-  memberTwoId: string;
+  memberOne: {
+    id: string;
+    role: "ADMIN" | "MEMBER";
+    user: {
+      id: string;
+      name: string;
+      imageUrl?: string;
+    };
+  };
+  memberTwo: {
+    id: string;
+    role: "ADMIN" | "MEMBER";
+    user: {
+      id: string;
+      name: string;
+      imageUrl?: string;
+    };
+  };
   workspaceId: string;
 }
 

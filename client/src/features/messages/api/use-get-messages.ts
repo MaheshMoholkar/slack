@@ -17,6 +17,10 @@ export interface MessageWithUser {
   body: string;
   image: string | null;
   updatedAt?: number;
+  threadCount?: number;
+  threadImage?: string;
+  threadName?: string;
+  threadTimestamp?: number;
   user: {
     _id: string;
     name: string;
@@ -28,10 +32,6 @@ export interface MessageWithUser {
     count: number;
     memberIds: string[];
   }>;
-  threadCount?: number;
-  threadImage?: string;
-  threadName?: string;
-  threadTimestamp?: number;
 }
 
 export type GetMessagesReturnType = MessageWithUser[];
@@ -51,13 +51,13 @@ function transformMessage(msg: any): MessageWithUser {
       if (reactionsMap.has(key)) {
         const existing = reactionsMap.get(key)!;
         existing.count++;
-        existing.memberIds.push(r.memberId || r.member?.id);
+        existing.memberIds.push(r.member?.id);
       } else {
         reactionsMap.set(key, {
           id: r.id,
           value: r.value,
           count: 1,
-          memberIds: [r.memberId || r.member?.id],
+          memberIds: [r.member?.id],
         });
       }
     }
@@ -66,12 +66,16 @@ function transformMessage(msg: any): MessageWithUser {
   return {
     _id: msg.id,
     _creationTime: msg.createdAt,
-    memberId: msg.memberId || member.id,
+    memberId: member.id,
     body: msg.body,
     image: msg.imageId
       ? `${API_BASE_URL}/upload/files/${msg.imageId}`
       : null,
     updatedAt: msg.updatedAt,
+    threadCount: msg.threadCount || undefined,
+    threadImage: msg.threadImage || undefined,
+    threadName: msg.threadName || undefined,
+    threadTimestamp: msg.threadTimestamp || undefined,
     user: {
       _id: user.id,
       name: user.name,
@@ -83,10 +87,6 @@ function transformMessage(msg: any): MessageWithUser {
       count: r.count,
       memberIds: r.memberIds,
     })),
-    threadCount: msg.threadCount,
-    threadImage: msg.threadImage,
-    threadName: msg.threadName,
-    threadTimestamp: msg.threadTimestamp,
   };
 }
 
@@ -108,7 +108,6 @@ export const useGetMessages = ({
       queryFn: async ({ pageParam = 0 }) => {
         let url = "";
         if (parentMessageId) {
-          // Thread messages — not paginated
           url = `/messages/thread/${parentMessageId}`;
           const res = await api.get(url);
           const messages = Array.isArray(res.data)

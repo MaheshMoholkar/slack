@@ -17,13 +17,13 @@ function transformMessage(msg: any) {
       if (reactionsMap.has(key)) {
         const existing = reactionsMap.get(key)!;
         existing.count++;
-        existing.memberIds.push(r.memberId || r.member?.id);
+        existing.memberIds.push(r.member?.id);
       } else {
         reactionsMap.set(key, {
           id: r.id,
           value: r.value,
           count: 1,
-          memberIds: [r.memberId || r.member?.id],
+          memberIds: [r.member?.id],
         });
       }
     }
@@ -32,7 +32,7 @@ function transformMessage(msg: any) {
   return {
     _id: msg.id,
     _creationTime: msg.createdAt,
-    memberId: msg.memberId || member.id,
+    memberId: member.id,
     body: msg.body,
     image: msg.imageId
       ? `${API_BASE_URL}/upload/files/${msg.imageId}`
@@ -49,10 +49,6 @@ function transformMessage(msg: any) {
       count: r.count,
       memberIds: r.memberIds,
     })),
-    threadCount: msg.threadCount,
-    threadImage: msg.threadImage,
-    threadName: msg.threadName,
-    threadTimestamp: msg.threadTimestamp,
   };
 }
 
