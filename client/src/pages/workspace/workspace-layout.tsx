@@ -1,6 +1,7 @@
-import React, { Suspense } from "react";
+import React, { Suspense, useEffect } from "react";
 import { Outlet } from "react-router-dom";
 import { Loader } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 
 import {
   ResizableHandle,
@@ -9,6 +10,8 @@ import {
 } from "@/components/ui/resizable";
 
 import { usePanel } from "@/hooks/use-panel";
+import { useWorkspaceId } from "@/hooks/use-workspace-id";
+import { useWebSocket } from "@/providers/websocket-provider";
 
 import { Sidebar } from "./sidebar";
 import { Toolbar } from "./toolbar";
@@ -27,6 +30,37 @@ const Profile = React.lazy(() =>
 
 const WorkspaceLayout = () => {
   const { parentMessageId, profileMemberId, onClose } = usePanel();
+  const workspaceId = useWorkspaceId();
+  const { subscribe, unsubscribe, isConnected } = useWebSocket();
+  const queryClient = useQueryClient();
+
+  // Subscribe to workspace-level WebSocket events for real-time updates
+  useEffect(() => {
+    if (!isConnected || !workspaceId) return;
+
+    const destination = `/topic/workspace/${workspaceId}`;
+    const subscriptionId = subscribe(destination, (message) => {
+      const event = JSON.parse(message.body);
+
+      if (event.type === "MEMBER_JOINED" || event.type === "MEMBER_UPDATED" || event.type === "MEMBER_LEFT") {
+        queryClient.invalidateQueries({ queryKey: ["members", workspaceId] });
+        queryClient.invalidateQueries({ queryKey: ["currentMember"] });
+      }
+
+      if (event.type === "CHANNEL_CREATED" || event.type === "CHANNEL_UPDATED" || event.type === "CHANNEL_DELETED") {
+        queryClient.invalidateQueries({ queryKey: ["channels", workspaceId] });
+      }
+
+      if (event.type === "WORKSPACE_UPDATED" || event.type === "WORKSPACE_DELETED") {
+        queryClient.invalidateQueries({ queryKey: ["workspaces"] });
+        queryClient.invalidateQueries({ queryKey: ["workspace", workspaceId] });
+      }
+    });
+
+    return () => {
+      unsubscribe(subscriptionId);
+    };
+  }, [isConnected, workspaceId, subscribe, unsubscribe, queryClient]);
 
   const showPanel = !!parentMessageId || !!profileMemberId;
 

@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import Quill from "quill";
 import { toast } from "sonner";
 
@@ -7,6 +7,8 @@ import { useCurrentMember } from "@/features/members/api/use-current-member";
 
 import { useChannelId } from "@/hooks/use-channel-id";
 import { useWorkspaceId } from "@/hooks/use-workspace-id";
+import { useWebSocket } from "@/providers/websocket-provider";
+import { useAuth } from "@/providers/auth-provider";
 
 import api from "@/lib/api";
 import Editor from "@/components/editor";
@@ -33,6 +35,39 @@ export const ChannelChatInput = ({ placeholder }: ChannelChatInputProps) => {
   const workspaceId = useWorkspaceId();
   const { data: currentMember } = useCurrentMember({ workspaceId });
   const { mutate: createMessage } = useCreateMessage();
+  const { publish } = useWebSocket();
+  const { user } = useAuth();
+
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isTypingRef = useRef(false);
+
+  const handleTyping = useCallback(() => {
+    if (!user) return;
+
+    if (!isTypingRef.current) {
+      isTypingRef.current = true;
+      publish("/app/typing", {
+        workspaceId,
+        channelId,
+        userId: user.id,
+        typing: true,
+      });
+    }
+
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    typingTimeoutRef.current = setTimeout(() => {
+      isTypingRef.current = false;
+      publish("/app/typing", {
+        workspaceId,
+        channelId,
+        userId: user.id,
+        typing: false,
+      });
+    }, 2000);
+  }, [workspaceId, channelId, user, publish]);
 
   const handleSubmit = async ({
     body,
@@ -81,6 +116,7 @@ export const ChannelChatInput = ({ placeholder }: ChannelChatInputProps) => {
         key={editorKey}
         placeholder={placeholder}
         onSubmit={handleSubmit}
+        onTyping={handleTyping}
         disabled={isPending}
         innerRef={editorRef}
       />

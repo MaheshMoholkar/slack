@@ -21,6 +21,7 @@ type EditorValue = {
 interface EditorProps {
   onSubmit: ({ image, body }: EditorValue) => void;
   onCancel?: () => void;
+  onTyping?: () => void;
   placeholder?: string;
   defaultValue?: Delta | Op[];
   disabled?: boolean;
@@ -31,6 +32,7 @@ interface EditorProps {
 const Editor = ({
   onCancel,
   onSubmit,
+  onTyping,
   placeholder = "Write something...",
   defaultValue = [],
   disabled = false,
@@ -43,6 +45,7 @@ const Editor = ({
   const imageUrlRef = useRef<string | null>(null);
 
   const submitRef = useRef(onSubmit);
+  const onTypingRef = useRef(onTyping);
   const placeholderRef = useRef(placeholder);
   const quillRef = useRef<Quill | null>(null);
   const defaultValueRef = useRef(defaultValue);
@@ -52,6 +55,7 @@ const Editor = ({
 
   useLayoutEffect(() => {
     submitRef.current = onSubmit;
+    onTypingRef.current = onTyping;
     placeholderRef.current = placeholder;
     defaultValueRef.current = defaultValue;
     disabledRef.current = disabled;
@@ -117,6 +121,7 @@ const Editor = ({
 
     quill.on(Quill.events.TEXT_CHANGE, () => {
       setText(quill.getText());
+      onTypingRef.current?.();
     });
 
     return () => {
