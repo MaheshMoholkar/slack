@@ -5,6 +5,7 @@ import com.slack.server.model.Member;
 import com.slack.server.model.Channel;
 import com.slack.server.model.Conversation;
 import com.slack.server.model.event.WebSocketEvent;
+import com.slack.server.dto.MessageDTO;
 import com.slack.server.repository.MessageRepository;
 import com.slack.server.repository.MemberRepository;
 import com.slack.server.repository.ChannelRepository;
@@ -71,16 +72,15 @@ public class MessageServiceImpl implements MessageService {
             message.setParentMessage(parentMessage);
         }
 
-        message.setUpdatedAt(System.currentTimeMillis());
         message = messageRepository.save(message);
 
         // Send WebSocket notification
-        WebSocketEvent<Message> event = new WebSocketEvent<>();
+        WebSocketEvent<MessageDTO> event = new WebSocketEvent<>();
         event.setType(WebSocketEvent.EventType.MESSAGE_SENT);
         event.setWorkspaceId(java.util.Objects.requireNonNull(workspaceId));
         event.setChannelId(channelId);
         event.setConversationId(conversationId);
-        event.setPayload(message);
+        event.setPayload(MessageDTO.fromEntity(message));
 
         if (channelId != null) {
             webSocketService.sendToChannel(workspaceId, channelId, event);
@@ -101,12 +101,12 @@ public class MessageServiceImpl implements MessageService {
         message = messageRepository.save(message);
 
         // Send WebSocket notification
-        WebSocketEvent<Message> event = new WebSocketEvent<>();
+        WebSocketEvent<MessageDTO> event = new WebSocketEvent<>();
         event.setType(WebSocketEvent.EventType.MESSAGE_UPDATED);
         event.setWorkspaceId(message.getWorkspace().getId());
         event.setChannelId(message.getChannel() != null ? message.getChannel().getId() : null);
         event.setConversationId(message.getConversation() != null ? message.getConversation().getId() : null);
-        event.setPayload(message);
+        event.setPayload(MessageDTO.fromEntity(message));
 
         if (message.getChannel() != null) {
             webSocketService.sendToChannel(message.getWorkspace().getId(), message.getChannel().getId(), event);
@@ -145,17 +145,34 @@ public class MessageServiceImpl implements MessageService {
 
     @Override
     public Page<Message> getChannelMessages(String channelId, Pageable pageable) {
-        return messageRepository.findByChannelIdOrderByUpdatedAtDesc(java.util.Objects.requireNonNull(channelId), pageable);
+        return messageRepository.findByChannelIdAndParentMessageIsNullOrderByCreatedAtDesc(java.util.Objects.requireNonNull(channelId), pageable);
     }
 
     @Override
     public Page<Message> getConversationMessages(String conversationId, Pageable pageable) {
-        return messageRepository.findByConversationIdOrderByUpdatedAtDesc(java.util.Objects.requireNonNull(conversationId), pageable);
+        return messageRepository.findByConversationIdAndParentMessageIsNullOrderByCreatedAtDesc(java.util.Objects.requireNonNull(conversationId), pageable);
     }
 
     @Override
     public List<Message> getThreadMessages(String parentMessageId) {
         return messageRepository.findByParentMessageId(java.util.Objects.requireNonNull(parentMessageId));
+    }
+
+    @Override
+    public MessageDTO enrichWithThreadInfo(MessageDTO dto) {
+        if (dto == null || dto.getId() == null) return dto;
+        long threadCount = messageRepository.countByParentMessageId(dto.getId());
+        if (threadCount > 0) {
+            dto.setThreadCount((int) threadCount);
+            messageRepository.findLatestReplyByParentMessageId(dto.getId()).ifPresent(latestReply -> {
+                if (latestReply.getMember() != null && latestReply.getMember().getUser() != null) {
+                    dto.setThreadImage(latestReply.getMember().getUser().getImageUrl());
+                    dto.setThreadName(latestReply.getMember().getUser().getName());
+                }
+                dto.setThreadTimestamp(latestReply.getCreatedAt());
+            });
+        }
+        return dto;
     }
 
     @Override
