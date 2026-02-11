@@ -17,10 +17,13 @@ interface WebSocketContextValue {
     callback: (message: IMessage) => void
   ) => string;
   unsubscribe: (id: string) => void;
+  publish: (destination: string, body: Record<string, unknown>) => void;
   isConnected: boolean;
 }
 
 const WebSocketContext = createContext<WebSocketContextValue | null>(null);
+
+const WS_URL = import.meta.env.VITE_WS_URL || "http://localhost:8080/ws";
 
 export function WebSocketProvider({ children }: { children: ReactNode }) {
   const { token } = useAuth();
@@ -41,7 +44,7 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
     }
 
     const client = new Client({
-      webSocketFactory: () => new SockJS("http://localhost:8080/ws"),
+      webSocketFactory: () => new SockJS(WS_URL),
       connectHeaders: {
         Authorization: `Bearer ${token}`,
       },
@@ -55,8 +58,10 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
         setIsConnected(false);
       },
       onStompError: (frame) => {
-        console.error("STOMP error:", frame.headers["message"]);
-        console.error("Details:", frame.body);
+        if (import.meta.env.DEV) {
+          console.error("STOMP error:", frame.headers["message"]);
+          console.error("Details:", frame.body);
+        }
       },
     });
 
@@ -101,6 +106,16 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
     []
   );
 
+  const publish = useCallback(
+    (destination: string, body: Record<string, unknown>) => {
+      const client = clientRef.current;
+      if (client && client.connected) {
+        client.publish({ destination, body: JSON.stringify(body) });
+      }
+    },
+    []
+  );
+
   const unsubscribe = useCallback((id: string) => {
     const subscription = subscriptionsRef.current.get(id);
     if (subscription) {
@@ -117,7 +132,7 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <WebSocketContext.Provider value={{ subscribe, unsubscribe, isConnected }}>
+    <WebSocketContext.Provider value={{ subscribe, unsubscribe, publish, isConnected }}>
       {children}
     </WebSocketContext.Provider>
   );
