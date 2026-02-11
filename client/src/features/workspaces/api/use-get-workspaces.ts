@@ -5,7 +5,7 @@ import { useAuth } from "@/providers/auth-provider";
 
 export const useGetWorkspaces = () => {
   const { user } = useAuth();
-  const { data, isLoading } = useQuery<Workspace[]>({
+  const { data, isLoading, isFetching } = useQuery<Workspace[]>({
     queryKey: ["workspaces", user?.id],
     queryFn: async () => {
       const res = await api.get(`/workspaces/user/${user!.id}`);
@@ -13,5 +13,5 @@ export const useGetWorkspaces = () => {
     },
     enabled: !!user?.id,
   });
-  return { data, isLoading };
+  return { data, isLoading, isFetching };
 };

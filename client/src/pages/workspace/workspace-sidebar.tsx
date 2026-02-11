@@ -85,7 +85,7 @@ export const WorkspaceSidebar = () => {
         hint="New direct message"
         onNew={() => {}}
       >
-        {members?.map((item) => (
+        {members?.filter((item) => item.id !== member.id).map((item) => (
           <UserItem
             key={item.id}
             id={item.id}

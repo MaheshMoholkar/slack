@@ -112,7 +112,8 @@
 
 html,
 body,
-:root {
+:root,
+#root {
   height: 100%;
 }
 

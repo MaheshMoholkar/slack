@@ -75,7 +75,7 @@ function AppRoutes() {
         }
       />
       <Route
-        path="/join/:workspaceId"
+        path="/join/:workspaceId/:joinCode?"
         element={
           <ProtectedRoute>
             <JoinPage />

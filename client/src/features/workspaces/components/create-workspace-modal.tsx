@@ -34,8 +34,8 @@ export const CreateWorkspaceModal = () => {
       {
         onSuccess(id) {
           toast.success("Workspace created");
-          navigate(`/workspace/${id}`);
           handleClose();
+          navigate(`/workspace/${id}`);
         },
         onError() {
           toast.error("Failed to create workspace");

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { Loader } from "lucide-react";
 import { toast } from "sonner";
 
@@ -13,11 +13,12 @@ import { useJoin } from "@/features/workspaces/api/use-join";
 const JoinPage = () => {
   const navigate = useNavigate();
   const workspaceId = useWorkspaceId();
+  const { joinCode } = useParams<{ joinCode?: string }>();
 
   const { data, isLoading } = useGetWorkspaceInfo({ id: workspaceId });
   const { mutate, isPending } = useJoin();
 
-  const [value, setValue] = useState("");
+  const [value, setValue] = useState(joinCode?.toUpperCase() || "");
 
   const isMember = useMemo(() => data?.isMember, [data?.isMember]);
 
@@ -26,6 +27,14 @@ const JoinPage = () => {
       navigate(`/workspace/${workspaceId}`, { replace: true });
     }
   }, [isMember, workspaceId, navigate]);
+
+  // Auto-submit if join code is provided in URL and valid
+  useEffect(() => {
+    if (joinCode && joinCode.length === 6 && !isPending && !isMember && !isLoading) {
+      handleComplete();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [joinCode, isLoading, isMember]);
 
   const handleComplete = () => {
     mutate(

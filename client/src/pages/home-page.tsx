@@ -7,20 +7,20 @@ import { useCreateWorkspaceModal } from "@/features/workspaces/store/use-create-
 
 const HomePage = () => {
   const navigate = useNavigate();
-  const { data: workspaces, isLoading } = useGetWorkspaces();
+  const { data: workspaces, isLoading, isFetching } = useGetWorkspaces();
   const [open, setOpen] = useCreateWorkspaceModal();
 
   const workspaceId = useMemo(() => workspaces?.[0]?.id, [workspaces]);
 
   useEffect(() => {
-    if (isLoading) return;
+    if (isLoading || isFetching) return;
 
     if (workspaceId) {
       navigate(`/workspace/${workspaceId}`, { replace: true });
     } else if (!open) {
       setOpen(true);
     }
-  }, [workspaceId, isLoading, open, setOpen, navigate]);
+  }, [workspaceId, isLoading, isFetching, open, setOpen, navigate]);
 
   return (
     <div className="h-full flex items-center justify-center">
