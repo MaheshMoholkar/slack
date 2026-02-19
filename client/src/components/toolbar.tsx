@@ -12,7 +12,6 @@ interface ToolbarProps {
   handleDelete: () => void;
   handleReaction: (value: string) => void;
   hideThreadButton?: boolean;
-  threadUnavailable?: boolean;
 }
 
 export const Toolbar = ({
@@ -23,7 +22,6 @@ export const Toolbar = ({
   handleDelete,
   handleReaction,
   hideThreadButton,
-  threadUnavailable = false,
 }: ToolbarProps) => {
   return (
     <div className="absolute top-0 right-5">
@@ -37,24 +35,12 @@ export const Toolbar = ({
           </Button>
         </EmojiPopover>
         {!hideThreadButton && (
-          <Hint
-            label={
-              threadUnavailable
-                ? "Threads are not available yet"
-                : "Reply in thread"
-            }
-          >
+          <Hint label="Reply in thread">
             <Button
               variant="ghost"
               size="iconSm"
               disabled={isPending}
-              aria-disabled={threadUnavailable || undefined}
-              className={
-                threadUnavailable
-                  ? "opacity-50 cursor-not-allowed hover:bg-transparent"
-                  : undefined
-              }
-              onClick={threadUnavailable ? undefined : handleThread}
+              onClick={handleThread}
             >
               <MessageSquareTextIcon className="size-4" />
             </Button>
