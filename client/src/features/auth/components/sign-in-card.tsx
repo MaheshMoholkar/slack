@@ -1,4 +1,5 @@
 import { useState } from "react";
+import axios from "axios";
 import { useAuth } from "@/providers/auth-provider";
 import { SignInFlow } from "@/features/auth/types";
 
@@ -18,6 +19,19 @@ interface SignInCardProps {
   setState: (state: SignInFlow) => void;
 }
 
+const GUEST_LOGINS = [
+  {
+    label: "Continue as Guest User 1",
+    email: "guest.user1@slack-app.dev",
+    password: "GuestUser@123",
+  },
+  {
+    label: "Continue as Guest User 2",
+    email: "guest.user2@slack-app.dev",
+    password: "GuestUser@123",
+  },
+] as const;
+
 export const SignInCard = ({ setState }: SignInCardProps) => {
   const { login } = useAuth();
 
@@ -26,6 +40,19 @@ export const SignInCard = ({ setState }: SignInCardProps) => {
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
 
+  const getLoginErrorMessage = (err: unknown) => {
+    if (axios.isAxiosError(err)) {
+      if (err.code === "ECONNABORTED" || !err.response) {
+        return "Server is unreachable. Please try again.";
+      }
+      if (err.response.status === 401) {
+        return "Invalid email or password";
+      }
+      return "Login failed. Please try again.";
+    }
+    return "Login failed. Please try again.";
+  };
+
   const onPasswordSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setPending(true);
@@ -33,8 +60,23 @@ export const SignInCard = ({ setState }: SignInCardProps) => {
 
     try {
       await login(email, password);
-    } catch {
-      setError("Invalid email or password");
+    } catch (err) {
+      setError(getLoginErrorMessage(err));
+    } finally {
+      setPending(false);
+    }
+  };
+
+  const onGuestSignIn = async (guestEmail: string, guestPassword: string) => {
+    setPending(true);
+    setError("");
+    setEmail(guestEmail);
+    setPassword(guestPassword);
+
+    try {
+      await login(guestEmail, guestPassword);
+    } catch (err) {
+      setError(getLoginErrorMessage(err));
     } finally {
       setPending(false);
     }
@@ -75,6 +117,20 @@ export const SignInCard = ({ setState }: SignInCardProps) => {
           <Button type="submit" className="w-full" size="lg" disabled={pending}>
             Continue
           </Button>
+          <div className="space-y-2 pt-1">
+            {GUEST_LOGINS.map((guest) => (
+              <Button
+                key={guest.email}
+                type="button"
+                variant="outline"
+                className="w-full"
+                disabled={pending}
+                onClick={() => void onGuestSignIn(guest.email, guest.password)}
+              >
+                {guest.label}
+              </Button>
+            ))}
+          </div>
         </form>
         <Separator />
         <p className="text-xs text-muted-foreground">

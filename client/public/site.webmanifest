@@ -1,0 +1,17 @@
+{
+  "name": "Slack",
+  "short_name": "Slack",
+  "description": "Real-time team messaging app with workspaces and channels.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#611f69",
+  "icons": [
+    {
+      "src": "/slack.png",
+      "sizes": "980x980",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

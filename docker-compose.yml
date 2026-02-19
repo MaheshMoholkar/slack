@@ -1,12 +1,28 @@
 services:
-  app:
+  api:
     build:
-      context: .
+      context: ./server
       dockerfile: Dockerfile
-      args:
-        VITE_API_URL: ${VITE_API_URL:-/api}
-        VITE_WS_URL: ${VITE_WS_URL:-/ws}
-    image: slack-app:latest
+    image: slack-api:latest
+    env_file:
+      - .env.api
+    expose:
+      - "8080"
     ports:
       - "8080:8080"
+    restart: unless-stopped
+  ui:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: /api
+        VITE_WS_URL: /ws
+    image: slack-ui:latest
+    depends_on:
+      - api
+    env_file:
+      - .env.ui
+    ports:
+      - "3000:80"
     restart: unless-stopped
