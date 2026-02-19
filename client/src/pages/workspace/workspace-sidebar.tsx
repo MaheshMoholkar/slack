@@ -13,6 +13,7 @@ import { useGetWorkspace } from "@/features/workspaces/api/use-get-workspace";
 import { useGetChannels } from "@/features/channels/api/use-get-channels";
 import { useGetMembers } from "@/features/members/api/use-get-members";
 import { useCreateChannelModal } from "@/features/channels/store/use-create-channel-modal";
+import { featureAvailability } from "@/lib/feature-availability";
 
 import { WorkspaceHeader } from "./workspace-header";
 import { SidebarItem } from "./sidebar-item";
@@ -62,8 +63,20 @@ export const WorkspaceSidebar = () => {
         isAdmin={member.role === "ADMIN"}
       />
       <div className="flex flex-col px-2 mt-3">
-        <SidebarItem label="Threads" icon={MessageSquareText} id="threads" />
-        <SidebarItem label="Drafts & Sent" icon={SendHorizonal} id="drafts" />
+        <SidebarItem
+          label="Threads"
+          icon={MessageSquareText}
+          id="threads"
+          disabled={!featureAvailability.threads}
+          unavailableHint="Threads are not available yet"
+        />
+        <SidebarItem
+          label="Drafts & Sent"
+          icon={SendHorizonal}
+          id="drafts"
+          disabled={!featureAvailability.draftsAndSent}
+          unavailableHint="Drafts & Sent is not available yet"
+        />
       </div>
       <WorkspaceSection
         label="Channels"

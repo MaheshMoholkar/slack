@@ -40,7 +40,11 @@ export const Toolbar = () => {
 
   return (
     <nav className="bg-[#481349] flex items-center justify-between h-10 p-1.5">
-      <div className="flex-1" />
+      <div className="flex-1 pl-2">
+        <p className="text-white text-sm font-semibold tracking-wide select-none">
+          Slack
+        </p>
+      </div>
       <div className="min-w-[280px] max-[642px] grow-[2] shrink">
         <Button
           onClick={() => setOpen(true)}

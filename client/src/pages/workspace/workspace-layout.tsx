@@ -12,6 +12,7 @@ import {
 import { usePanel } from "@/hooks/use-panel";
 import { useWorkspaceId } from "@/hooks/use-workspace-id";
 import { useWebSocket } from "@/providers/websocket-provider";
+import { featureAvailability } from "@/lib/feature-availability";
 
 import { Sidebar } from "./sidebar";
 import { Toolbar } from "./toolbar";
@@ -62,7 +63,8 @@ const WorkspaceLayout = () => {
     };
   }, [isConnected, workspaceId, subscribe, unsubscribe, queryClient]);
 
-  const showPanel = !!parentMessageId || !!profileMemberId;
+  const showThreadPanel = featureAvailability.threads && !!parentMessageId;
+  const showPanel = showThreadPanel || !!profileMemberId;
 
   return (
     <div className="h-full">
@@ -95,9 +97,9 @@ const WorkspaceLayout = () => {
                     </div>
                   }
                 >
-                  {parentMessageId ? (
+                  {showThreadPanel ? (
                     <Thread
-                      messageId={parentMessageId}
+                      messageId={parentMessageId!}
                       onClose={onClose}
                     />
                   ) : profileMemberId ? (

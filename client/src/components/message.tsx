@@ -6,6 +6,7 @@ import { useRemoveMessage } from "@/features/messages/api/use-remove-message";
 import { useToggleReaction } from "@/features/reactions/api/use-toggle-reaction";
 
 import { cn } from "@/lib/utils";
+import { featureAvailability } from "@/lib/feature-availability";
 import { usePanel } from "@/hooks/use-panel";
 import { useConfirm } from "@/hooks/use-confirm";
 
@@ -171,13 +172,17 @@ export const Message = ({
                   </span>
                 ) : null}
                 <Reactions data={reactions} onChange={handleReaction} />
-                <ThreadBar
-                  count={threadCount}
-                  image={threadImage}
-                  name={threadName}
-                  timestamp={threadTimestamp}
-                  onClick={() => onOpenMessage(id)}
-                />
+                {!hideThreadButton && (
+                  <ThreadBar
+                    count={threadCount}
+                    image={threadImage}
+                    name={threadName}
+                    timestamp={threadTimestamp}
+                    onClick={() => onOpenMessage(id)}
+                    disabled={!featureAvailability.threads}
+                    unavailableHint="Threads are not available yet"
+                  />
+                )}
               </div>
             )}
           </div>
@@ -190,6 +195,7 @@ export const Message = ({
               handleDelete={handleRemove}
               handleReaction={handleReaction}
               hideThreadButton={hideThreadButton}
+              threadUnavailable={!featureAvailability.threads}
             />
           )}
         </div>
@@ -251,13 +257,17 @@ export const Message = ({
                 </span>
               ) : null}
               <Reactions data={reactions} onChange={handleReaction} />
-              <ThreadBar
-                count={threadCount}
-                image={threadImage}
-                name={threadName}
-                timestamp={threadTimestamp}
-                onClick={() => onOpenMessage(id)}
-              />
+              {!hideThreadButton && (
+                <ThreadBar
+                  count={threadCount}
+                  image={threadImage}
+                  name={threadName}
+                  timestamp={threadTimestamp}
+                  onClick={() => onOpenMessage(id)}
+                  disabled={!featureAvailability.threads}
+                  unavailableHint="Threads are not available yet"
+                />
+              )}
             </div>
           )}
         </div>
@@ -270,6 +280,7 @@ export const Message = ({
             handleDelete={handleRemove}
             handleReaction={handleReaction}
             hideThreadButton={hideThreadButton}
+            threadUnavailable={!featureAvailability.threads}
           />
         )}
       </div>

@@ -6,6 +6,7 @@ import { ImageIcon, Smile, XIcon } from "lucide-react";
 import { MutableRefObject, useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { cn } from "@/lib/utils";
+import { featureAvailability } from "@/lib/feature-availability";
 
 import { Hint } from "./hint";
 import { Button } from "./ui/button";
@@ -83,6 +84,13 @@ const Editor = ({
             enter: {
               key: "Enter",
               handler: () => {
+                if (
+                  disabledRef.current ||
+                  (variant === "create" && !featureAvailability.sendMessages)
+                ) {
+                  return true;
+                }
+
                 const text = quill.getText();
                 const addedImage = imageElementRef.current?.files?.[0] || null;
 
@@ -159,6 +167,8 @@ const Editor = ({
 
   const isEmpty =
     !image && text.replace(/<(.|\n)*?>/g, "").trim().length === 0;
+  const isSendUnavailable =
+    variant === "create" && !featureAvailability.sendMessages;
 
   return (
     <div className="flex flex-col">
@@ -263,26 +273,43 @@ const Editor = ({
               </Button>
             </div>
           )}
-          {variant === "create" && (
-            <Button
-              disabled={disabled || isEmpty}
-              onClick={() => {
-                onSubmit({
-                  body: JSON.stringify(quillRef.current?.getContents()),
-                  image,
-                });
-              }}
-              size="iconSm"
-              className={cn(
-                "ml-auto",
-                isEmpty
-                  ? "bg-white hover:bg-white text-muted-foreground"
-                  : "bg-[#007a5a] hover:bg-[#007a5a]/80 text-white"
-              )}
-            >
-              <MdSend className="size-4" />
-            </Button>
-          )}
+          {variant === "create" &&
+            (isSendUnavailable ? (
+              <Hint label="Sending messages is not available yet">
+                <span className="ml-auto inline-flex">
+                  <Button
+                    disabled
+                    size="iconSm"
+                    className={cn(
+                      isEmpty
+                        ? "bg-white hover:bg-white text-muted-foreground"
+                        : "bg-[#007a5a] hover:bg-[#007a5a]/80 text-white"
+                    )}
+                  >
+                    <MdSend className="size-4" />
+                  </Button>
+                </span>
+              </Hint>
+            ) : (
+              <Button
+                disabled={disabled || isEmpty}
+                onClick={() => {
+                  onSubmit({
+                    body: JSON.stringify(quillRef.current?.getContents()),
+                    image,
+                  });
+                }}
+                size="iconSm"
+                className={cn(
+                  "ml-auto",
+                  isEmpty
+                    ? "bg-white hover:bg-white text-muted-foreground"
+                    : "bg-[#007a5a] hover:bg-[#007a5a]/80 text-white"
+                )}
+              >
+                <MdSend className="size-4" />
+              </Button>
+            ))}
         </div>
       </div>
       {variant === "create" && (
